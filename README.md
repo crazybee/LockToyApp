@@ -1,6 +1,6 @@
 # LockToyApp
 a toy app to show the POC of a smart door system 
-Usage demo video https://youtu.be/UbSmU8plS7E
+Usage demo video https://youtu.be/dPjCnVGX5us
 
 The web app together with the swagger ui enabled is deployed at the url https://locktoyapp.azurewebsites.net/swagger/index.html
 
