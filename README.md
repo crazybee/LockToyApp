@@ -2,11 +2,18 @@
 a toy app to show the POC of a smart door system 
 Usage demo video https://youtu.be/UbSmU8plS7E
 
+The web app together with the swagger ui enabled is deployed at the url https://locktoyapp.azurewebsites.net/swagger/index.html
+
+
 #Overview
 In the solution folder there are four project folders: ToyContracts, SimulatedDoor, LockToyApp and DoorOperationFunc The ToyContract project contains the definitions across the whole application.
 
 The SimulatedDoor project is a modified console iot hub client application from Microsoft example snippet, it is supposed to run inside the lock OS to receive the commands from the iot Hub.<br/>
-The LockToyApp is the web api application which receives the commands to open the door, check the operation history of a specific door, or get user information for the authorized user.<br/>
+The LockToyApp is the web api application which receives the commands to open the door, check the operation history of a specific door, or get user information for the authorized user. There are currently three routes:
+GET /api/LockOp/GetUserByName
+POST /api/LockOp/OpenDoor
+GET /api/LockOp/DoorHistory
+<br/>
 The DoorOperationFunc project is an Azure Function App which receives the commands message from the service bus and forward it to the iot hub, meanwhile it also consolidates the operations inside the Azure Cosmos Container
 
 #Limitations
