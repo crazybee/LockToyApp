@@ -1,6 +1,7 @@
 
 using Azure.Messaging.ServiceBus;
 using LockToyApp.DAL;
+using LockToyApp.Helpers;
 using LockToyApp.Services;
 using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore;
@@ -57,6 +58,8 @@ var msgSender = sbClient.CreateSender(msgQueueName);
 builder.Services.AddSingleton(msgSender);
 builder.Services.AddSingleton<IDoorOperationSender, DoorOperationSender>();
 
+
+
 var app = builder.Build();
 
 
@@ -68,6 +71,8 @@ app.UseSwaggerUI();
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+// custom jwt auth middleware
+app.UseMiddleware<JwtMiddleware>();
 
 app.MapControllers();
 using (var scope = app.Services.CreateScope())

@@ -21,7 +21,7 @@ namespace LockToyApp.DAL
             options.UseSqlServer(this.ConnectionStrings.SqlConnectioniString);
         }
 
-        public DbSet<User> Users { get; set; }
+        public DbSet<DBEntities.User> Users { get; set; }
 
         public DbSet<Door> Doors { get; set; }
 
@@ -29,8 +29,8 @@ namespace LockToyApp.DAL
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<User>().ToTable("Users");
-            modelBuilder.Entity<Door>().ToTable("Doors");
+            modelBuilder.Entity<DBEntities.User>().ToTable("Users");
+            modelBuilder.Entity<DBEntities.Door>().ToTable("Doors");
         }
 
     }
