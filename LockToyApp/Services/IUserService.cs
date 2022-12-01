@@ -1,4 +1,5 @@
 ﻿using LockToyApp.DBEntities;
+using LockToyApp.Models;
 
 namespace LockToyApp.Services
 {
@@ -7,6 +8,8 @@ namespace LockToyApp.Services
         Task<User> GetUserByName(string userName );
 
         Task<Boolean> IsUserValid(string userName, string userToken);
+
+        Task<AuthenticationResponse?> Authenticate(AuthenticationRequest request);
 
     }
 }

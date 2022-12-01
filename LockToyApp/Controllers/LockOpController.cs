@@ -1,5 +1,8 @@
 ﻿
+
+using LockToyApp.Attributes;
 using LockToyApp.DTOs;
+using LockToyApp.Models;
 using LockToyApp.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -23,83 +26,94 @@ namespace LockToyApp.Controllers
             this.doorOperationSender = doorOperationSender;
         }
 
-        [HttpGet("GetUserByName")]
-        public async Task<ActionResult<UserDto>?> Get([FromHeader(Name ="username")] string userName, [FromHeader(Name ="password")] string password)
+        [HttpPost("authenticate")]
+        public async Task<ActionResult> Authenticate(AuthenticationRequest request)
         {
-            var userIsValide = await this.userService.IsUserValid(userName, password);
-            if (!userIsValide)
-            {
-                return this.Unauthorized();
-            }
+            var response = await this.userService.Authenticate(request);
 
-            var user = await this.userService.GetUserByName(userName);
-            if (user != null)
-            {
-                var registrations = user.UserRegistrations;
-                var doorIds = registrations.Select(r => r.DoorID).ToList();
+            if (response == null)
+                return BadRequest(new { message = "Username or password is incorrect" });
 
-                return new UserDto() { UserName = user.UserName, UserType = user.UserType, DoorIds = doorIds };
-            }
-            return null;
+            return Ok(response);
         }
 
-        [HttpPost("OpenDoor")]
-        public async Task<ActionResult<string>?> Post([FromHeader(Name = "username")] string userName, [FromHeader(Name = "password")] string password, string doorId)
+        [CrazybeeAuthorize]
+        [HttpGet("GetUserByName")]
+        public async Task<ActionResult<UserDto>?> Get(string userName)
         {
-            Guid parsedDoorId;
-            if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password) || string.IsNullOrEmpty(doorId) || !Guid.TryParse(doorId, out parsedDoorId))
-            {
-                return this.BadRequest();
-            }
-            var userIsValide = await this.userService.IsUserValid(userName, password);
-            if (!userIsValide)
-            {
-                return this.Unauthorized();
-            }
-
             
             var user = await this.userService.GetUserByName(userName);
-            if (user != null)
+            var userInContext = this.HttpContext.Items["User"] as DBEntities.User;
+            if (user == null || userInContext == null || user != userInContext)
             {
-                var registrations = user.UserRegistrations;
-                var doorIds = registrations.Select(r => r.DoorID).ToList();
-
-                if (doorIds.Contains(parsedDoorId))
-                {
-                    var doorOpenRequest = new ToyContracts.DoorOpRequest() 
-                    {
-                        UserId = user.UserID,
-                        DoorId = parsedDoorId,
-                        UserName = user.UserName
-                    };
-                    var isSuccessful = await this.doorOperationSender.SendOperationAsync(doorOpenRequest);
-                    var result = isSuccessful ? "successful" : "failed";
-                    return this.Ok($"sent door open request with result {result}");
-                }
-
+                return null;
             }
-            return null;
+
+            var registrations = user.UserRegistrations;
+            var doorIds = registrations.Select(r => r.DoorID).ToList();
+
+            return new UserDto() { UserName = user.UserName, UserType = user.UserType, DoorIds = doorIds };
+            
         }
 
-        [HttpGet("DoorHistory")]
-        public async Task<ActionResult<List<HistoryDto>>> GetDoorHistory([FromHeader(Name = "username")] string userName, [FromHeader(Name = "password")] string password, string doorId)
+        [CrazybeeAuthorize]
+        [HttpPost("OpenDoor")]
+        public async Task<ActionResult?> Post([FromBody] DoorRequest doorRequest)
         {
             Guid parsedDoorId;
-            var historyToReturn = new List<HistoryDto>();
-            if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password) || string.IsNullOrEmpty(doorId) || !Guid.TryParse(doorId, out parsedDoorId))
+            if (!Guid.TryParse(doorRequest?.DoorId, out parsedDoorId))
             {
                 return this.BadRequest();
             }
+            var user = await this.userService.GetUserByName(doorRequest.UserName);
+            var userInContext = this.HttpContext.Items["User"] as DBEntities.User;
 
-            var userIsValide = await this.userService.IsUserValid(userName, password);
-            var foundUser= await this.userService.GetUserByName(userName);
+            if (userInContext != user || user == null)
+            {
+                return null;
+            }
 
-            if (!userIsValide || foundUser == null || foundUser.UserType != Models.UserType.Administrator)
+          
+            var registrations = user.UserRegistrations;
+            var doorIds = registrations.Select(r => r.DoorID).ToList();
+
+            if (doorIds.Contains(parsedDoorId))
+            {
+                var doorOpenRequest = new ToyContracts.DoorOpRequest()
+                {
+                    UserId = user.UserID,
+                    DoorId = parsedDoorId,
+                    UserName = user.UserName
+                };
+                var isSuccessful = await this.doorOperationSender.SendOperationAsync(doorOpenRequest);
+                var result = isSuccessful ? "successful" : "failed";
+                return this.Ok($"sent door open request with result {result}");
+            }
+
+            return null;
+
+        }
+
+        [CrazybeeAuthorize]
+        [HttpGet("DoorHistory")]
+        public async Task<ActionResult<List<HistoryDto>>?> GetDoorHistory([FromBody] DoorRequest doorRequest)
+        {
+           
+            var historyToReturn = new List<HistoryDto>();
+            var foundUser = await this.userService.GetUserByName(doorRequest.UserName);
+            if (foundUser == null)
+            {
+                return null;
+            }
+
+            var userInContext = this.HttpContext.Items["User"] as DBEntities.User;
+
+            if (userInContext == null || foundUser.UserType != UserType.Administrator || userInContext != foundUser)
             {
                 return this.Unauthorized();
             }
 
-            var doorHistory = await this.doorHistoryService.GetDoorHistoryItemsAsync(doorId);
+            var doorHistory = await this.doorHistoryService.GetDoorHistoryItemsAsync(doorRequest.DoorId);
 
             if (doorHistory.Any())
             {
