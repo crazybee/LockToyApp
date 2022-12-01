@@ -8,7 +8,8 @@
 
         public string UserName { get; set; }
 
-        public string Command { get; set; } = "open";
+        public string Command { get; set; } = "open"; // by default we only need to send open request, the door will close by it self
+
         public DateTime OperationTime { get; set; } = DateTime.UtcNow;
 
 

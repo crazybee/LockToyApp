@@ -1,6 +1,4 @@
-﻿
-
-using LockToyApp.Attributes;
+﻿using LockToyApp.Attributes;
 using LockToyApp.DTOs;
 using LockToyApp.Models;
 using LockToyApp.Services;
@@ -38,7 +36,7 @@ namespace LockToyApp.Controllers
         }
 
         [CrazybeeAuthorize]
-        [HttpGet("GetUserByName")]
+        [HttpGet("user")]
         public async Task<ActionResult<UserDto>?> Get(string userName)
         {
             
@@ -57,7 +55,7 @@ namespace LockToyApp.Controllers
         }
 
         [CrazybeeAuthorize]
-        [HttpPost("OpenDoor")]
+        [HttpPost("opendoor")]
         public async Task<ActionResult?> Post([FromBody] DoorRequest doorRequest)
         {
             Guid parsedDoorId;
@@ -95,7 +93,7 @@ namespace LockToyApp.Controllers
         }
 
         [CrazybeeAuthorize]
-        [HttpGet("DoorHistory")]
+        [HttpGet("doorhistory")]
         public async Task<ActionResult<List<HistoryDto>>?> GetDoorHistory([FromBody] DoorRequest doorRequest)
         {
            
