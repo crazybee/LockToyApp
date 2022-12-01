@@ -1,5 +1,6 @@
 ﻿namespace ToyContracts
 {
+    
     public class ConnectionStrings
     {
         public string? SqlConnectioniString { get; set; } 

@@ -11,6 +11,9 @@ using ToyContracts;
 
 namespace DoorOperationFunc
 {
+    /// <summary>
+    /// The purpose of this function app is to trigger the open door event for the IoThub and consolidate the action inside cosmos DB
+    /// </summary>
     public class Function1
     {
         [FunctionName("DoorOperationFunc")]
@@ -42,6 +45,12 @@ namespace DoorOperationFunc
 
         }
 
+        /// <summary>
+        /// serialize the open door request 
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
         private async Task<bool> SendCloudToDeviceMessageAsync(ServiceClient client,  DoorOpRequest request)
         {
             var requestString = JsonSerializer.Serialize(request);
@@ -59,6 +68,12 @@ namespace DoorOperationFunc
           
         }
 
+        /// <summary>
+        /// consolidate the action inside Cosmos DB
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
         private async Task<DoorHistoryData> WriteRecordInCosmos(CosmosClient client, DoorOpRequest request)
         {
             var container = client.GetContainer("DoorDB","DoorHistory");

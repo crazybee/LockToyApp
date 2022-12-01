@@ -10,6 +10,7 @@ using Microsoft.Azure.Devices.Client;
 using CommandLine;
 using ToyContracts;
 
+
 namespace SimulatedDoor
 {
     /// <summary>
@@ -37,7 +38,7 @@ namespace SimulatedDoor
             Console.WriteLine("Device simulator finished.");
         }
 
-        // Async method to send simulated telemetry
+        // Async method to receive the commands from the IoT hub
         private static async Task ReceiveLoop(DeviceClient deviceClient)
         {     
             try
