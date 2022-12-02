@@ -32,3 +32,4 @@ For CI/CD, the solution was planned to be built and deployed using Azure DevOp p
 
 web api (validate user, query sql table, query cosmos db) &rarr; send message to service bus queue &rarr; azure function listens at the service bus queue &rarr; azure function consolidate the operation records in cosmos db and send processed message to iot hub &rarr; iot hub forward commands to the iot device
 
+![image](https://user-images.githubusercontent.com/3876170/205245434-50ee5393-93f6-46c9-b27f-e334dc0334d1.png)
