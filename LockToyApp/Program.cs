@@ -2,6 +2,7 @@
 using Azure.Messaging.ServiceBus;
 using LockToyApp.DAL;
 using LockToyApp.Helpers;
+using LockToyApp.Injection;
 using LockToyApp.Repositories;
 using LockToyApp.Services;
 using Microsoft.Azure.Cosmos;
@@ -54,11 +55,11 @@ var clientOptions = new ServiceBusClientOptions() { TransportType = ServiceBusTr
 var sbClient = new ServiceBusClient(sbsenderConnection, clientOptions);
 var msgQueueName = appSettingItems.OperationQueueName;
 var msgSender = sbClient.CreateSender(msgQueueName);
+
+// inject services
+DoorServiceProvider.AddServices(builder.Services);
 builder.Services.AddSingleton(msgSender);
-builder.Services.AddSingleton<IDoorOperationSender, DoorOperationSender>();
-builder.Services.AddScoped<IPasswordHasher, PasswordHasher>(); // because IOption is scoped
-builder.Services.AddScoped<IUserRepository, UserRepository>(); 
-builder.Services.AddScoped<IUserService, UserService>();
+
 var app = builder.Build();
 app.UseDeveloperExceptionPage();
 app.UseSwagger();
