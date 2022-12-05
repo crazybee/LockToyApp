@@ -11,10 +11,9 @@ In the solution folder there are four project folders: ToyContracts, SimulatedDo
 The SimulatedDoor project is a modified console iot hub client application from Microsoft example snippet, it is supposed to run inside the lock OS to receive the commands from the iot Hub. <br/>
 <br/>
 The LockToyApp is the web api application which receives the commands to open the door, check the operation history of a specific door, or get user information for the authorized user. There are currently three routes: <br/>
-POST /api/lockoperation/authenticate
-GET /api/lockoperation/user <br/>
-POST /api/lockoperation/opendoor <br/>
-GET /api/lockoperation/doorhistory
+GET /api/LockOp/GetUserByName <br/>
+POST /api/LockOp/OpenDoor <br/>
+GET /api/LockOp/DoorHistory
 <br/>
 <br/>
 The DoorOperationFunc project is an Azure Function App which receives the commands message from the service bus and forward it to the iot hub, meanwhile it also consolidates the operations inside the Azure Cosmos Container

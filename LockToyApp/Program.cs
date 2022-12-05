@@ -2,14 +2,13 @@
 using Azure.Messaging.ServiceBus;
 using LockToyApp.DAL;
 using LockToyApp.Helpers;
+using LockToyApp.Repositories;
 using LockToyApp.Services;
 using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore;
 using ToyContracts;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
-builder.Services.AddScoped<IUserService, UserService>();
 
 // Retrieve the app configuration store connection string
 var appConfigConnectionString = builder.Configuration.GetConnectionString("AppConfig");
@@ -57,16 +56,13 @@ var msgQueueName = appSettingItems.OperationQueueName;
 var msgSender = sbClient.CreateSender(msgQueueName);
 builder.Services.AddSingleton(msgSender);
 builder.Services.AddSingleton<IDoorOperationSender, DoorOperationSender>();
-
-
-
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>(); // because IOption is scoped
+builder.Services.AddScoped<IUserRepository, UserRepository>(); 
+builder.Services.AddScoped<IUserService, UserService>();
 var app = builder.Build();
-
-
-
+app.UseDeveloperExceptionPage();
 app.UseSwagger();
 app.UseSwaggerUI();
-
 
 app.UseHttpsRedirection();
 

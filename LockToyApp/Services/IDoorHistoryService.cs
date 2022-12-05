@@ -1,9 +1,10 @@
-﻿using ToyContracts;
+﻿using LockToyApp.DTOs;
+using ToyContracts;
 
 namespace LockToyApp.Services
 {
     public interface IDoorHistoryService
     {
-        Task<IEnumerable<DoorHistoryData>> GetDoorHistoryItemsAsync(string queryString);
+        Task<List<HistoryDto>> GetDoorHistoryItemsAsync(string queryString);
     }
 }

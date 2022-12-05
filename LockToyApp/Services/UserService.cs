@@ -1,31 +1,30 @@
-﻿using LockToyApp.DAL;
-using LockToyApp.DBEntities;
+﻿using LockToyApp.DBEntities;
 using LockToyApp.Helpers;
 using LockToyApp.Models;
-using Microsoft.EntityFrameworkCore;
+using LockToyApp.Repositories;
 
 namespace LockToyApp.Services
 {
     public class UserService : IUserService
     {
-        private readonly LockDBContext lockContext;
+        private readonly IUserRepository userRepository;
         private readonly IPasswordHasher passwordHasher;
-        public UserService(LockDBContext lockContext, IPasswordHasher passwordHasher)
+        public UserService(IUserRepository userRepository, IPasswordHasher passwordHasher)
         {
-            this.lockContext = lockContext;
+            this.userRepository = userRepository;
             this.passwordHasher = passwordHasher;
         }
-        public async Task<User> GetUserByName(string userName)
+        public async Task<User?> GetUserByName(string userName)
         {
-            var foundUser = await this.lockContext.Users.Include(a => a.UserRegistrations).FirstOrDefaultAsync(u => u.UserName == userName);
+            var foundUser = await userRepository.GetUserByNameAsync(userName);
 
-            return foundUser;
+            return foundUser ?? null;
         }
 
         public async Task<bool> IsUserValid(string userName, string password)
         {
 
-            var foundUser = this.lockContext.Users.FirstOrDefault<User>(u => u.UserName == userName);
+            var foundUser = await this.userRepository.GetUserByNameAsync(userName);
 
             if (foundUser != null)
             {
@@ -47,9 +46,9 @@ namespace LockToyApp.Services
 
             try
             {
-                var user = await this.lockContext.Users.FirstOrDefaultAsync<User>(x => x.UserName == model.Username && x.Token == calculatedHash);
+                var user = await this.userRepository.GetUserByNameAsync(model.Username);
 
-                if (user == null)
+                if (user == null || user.Token != calculatedHash)
                 {
                     return null;
                 }
@@ -69,10 +68,17 @@ namespace LockToyApp.Services
             catch (Exception ex)
             {
 
-                // TODO:log exception if happens
+                // TODO:log exception if happens in application insight
                 return null;
             }
 
         }
+
+        public async Task<ICollection<UserRegistration>?> GetUserRegistrations(string userName)
+        {
+            var userRegistrations = await this.userRepository.GetUserRegistrationsByUserName(userName);
+            return userRegistrations;
+        }
+
     }
 }
