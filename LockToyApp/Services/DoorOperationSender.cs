@@ -22,7 +22,6 @@ namespace LockToyApp.Services
             {
                 try
                 {
-
                     var requestPayload = JsonConvert.SerializeObject(request);
                     await this.sbsender.SendMessageAsync(new ServiceBusMessage(requestPayload));
                     isSuccessful = true;

@@ -3,23 +3,18 @@ using LockToyApp.DTOs;
 using LockToyApp.Models;
 using LockToyApp.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using ToyContracts;
 
 namespace LockToyApp.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/lockoperation")]
     [ApiController]
-    public class LockOpController : ControllerBase
+    public class LockOpController : BaseController
     {
-        public Settings Settings { get; }
-        public readonly IUserService userService;
         public readonly IDoorHistoryService doorHistoryService;
         public readonly IDoorOperationSender doorOperationSender;
-        public LockOpController(IOptionsSnapshot<Settings> settings, IUserService userService, IDoorHistoryService doorHistoryService, IDoorOperationSender doorOperationSender)
+        public LockOpController(IUserService userService, IDoorHistoryService doorHistoryService, IDoorOperationSender doorOperationSender) : base(userService)
         {
-            this.Settings = settings.Value;
-            this.userService = userService;
             this.doorHistoryService = doorHistoryService;
             this.doorOperationSender = doorOperationSender;
         }
@@ -39,18 +34,17 @@ namespace LockToyApp.Controllers
         [HttpGet("user")]
         public async Task<ActionResult<UserDto>?> Get(string userName)
         {
-            
-            var user = await this.userService.GetUserByName(userName);
-            var userInContext = this.HttpContext.Items["User"] as DBEntities.User;
-            if (user == null || userInContext == null || user != userInContext)
+           
+            var validUser = await IsUserValidInContext(userName);
+            if (validUser == null)
             {
                 return null;
             }
 
-            var registrations = user.UserRegistrations;
-            var doorIds = registrations.Select(r => r.DoorID).ToList();
+            var registrations = await this.userService.GetUserRegistrations(userName);
+            var doorIds = registrations?.Select(r => r.DoorID).ToList();
 
-            return new UserDto() { UserName = user.UserName, UserType = user.UserType, DoorIds = doorIds };
+            return new UserDto() { UserName = validUser.UserName, UserType = validUser.UserType.ToString(), DoorIds = doorIds };
             
         }
 
@@ -59,36 +53,29 @@ namespace LockToyApp.Controllers
         public async Task<ActionResult?> Post([FromBody] DoorRequest doorRequest)
         {
             Guid parsedDoorId;
-            if (!Guid.TryParse(doorRequest?.DoorId, out parsedDoorId))
+            var validUser = await IsUserValidInContext(doorRequest.UserName);
+            if (!Guid.TryParse(doorRequest?.DoorId, out parsedDoorId) || validUser == null)
             {
                 return this.BadRequest();
             }
-            var user = await this.userService.GetUserByName(doorRequest.UserName);
-            var userInContext = this.HttpContext.Items["User"] as DBEntities.User;
 
-            if (userInContext != user || user == null)
+            var registrations = await this.userService.GetUserRegistrations(doorRequest.UserName);
+            var doorIds = registrations?.Select(r => r.DoorID).ToList();
+
+            if (doorIds != null && doorIds.Contains(parsedDoorId))
             {
-                return null;
-            }
-
-          
-            var registrations = user.UserRegistrations;
-            var doorIds = registrations.Select(r => r.DoorID).ToList();
-
-            if (doorIds.Contains(parsedDoorId))
-            {
-                var doorOpenRequest = new ToyContracts.DoorOpRequest()
+                var doorOpenRequest = new DoorOpRequest()
                 {
-                    UserId = user.UserID,
+                    UserId = validUser.UserID,
                     DoorId = parsedDoorId,
-                    UserName = user.UserName
+                    UserName = validUser.UserName
                 };
                 var isSuccessful = await this.doorOperationSender.SendOperationAsync(doorOpenRequest);
                 var result = isSuccessful ? "successful" : "failed";
                 return this.Ok($"sent door open request with result {result}");
             }
 
-            return null;
+            return this.NotFound();
 
         }
 
@@ -97,39 +84,13 @@ namespace LockToyApp.Controllers
         public async Task<ActionResult<List<HistoryDto>>?> GetDoorHistory([FromBody] DoorRequest doorRequest)
         {
            
-            var historyToReturn = new List<HistoryDto>();
-            var foundUser = await this.userService.GetUserByName(doorRequest.UserName);
-            if (foundUser == null)
+            var validUser = await IsUserValidInContext(doorRequest.UserName);
+            if (validUser == null || validUser.UserType != UserType.Administrator)
             {
-                return null;
+                return this.BadRequest();
             }
 
-            var userInContext = this.HttpContext.Items["User"] as DBEntities.User;
-
-            if (userInContext == null || foundUser.UserType != UserType.Administrator || userInContext != foundUser)
-            {
-                return this.Unauthorized();
-            }
-
-            var doorHistory = await this.doorHistoryService.GetDoorHistoryItemsAsync(doorRequest.DoorId);
-
-            if (doorHistory.Any())
-            {
-                foreach (var item in doorHistory)
-                {
-                    historyToReturn.Add(new HistoryDto 
-                    {
-                        DoorAction = item.Operation,
-                        UserName = item.UserName,
-                        OperationTime = item.OperationTime
-                    });
-                }
-            }
-
-            return historyToReturn;
-
+            return await this.doorHistoryService.GetDoorHistoryItemsAsync(doorRequest.DoorId);
         }
-
-
     }
 }
