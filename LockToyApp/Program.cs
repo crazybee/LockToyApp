@@ -49,16 +49,8 @@ static IDoorHistoryService InitializeDoorHistoryDb(string cosmosConnection)
     return doorHistoryService;
 }
 
-// DI for service bus queue msg sender
-var sbsenderConnection = connectionStringItems.SBSender;
-var clientOptions = new ServiceBusClientOptions() { TransportType = ServiceBusTransportType.AmqpWebSockets };
-var sbClient = new ServiceBusClient(sbsenderConnection, clientOptions);
-var msgQueueName = appSettingItems.OperationQueueName;
-var msgSender = sbClient.CreateSender(msgQueueName);
-
 // inject services
-DoorServiceProvider.AddServices(builder.Services);
-builder.Services.AddSingleton(msgSender);
+DoorServiceProvider.AddServices(builder.Services, connectionStringItems, appSettingItems);
 
 var app = builder.Build();
 app.UseDeveloperExceptionPage();
