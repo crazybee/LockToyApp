@@ -39,15 +39,16 @@ builder.Services.AddDbContext<LockDBContext>(
 
 // DI for door history service
 var cosmosConnection = connectionStringItems.CosmosConnectionString;
-builder.Services.AddSingleton(InitializeDoorHistoryDb(cosmosConnection));
-static IDoorHistoryService InitializeDoorHistoryDb(string cosmosConnection)
-{
-    var cosmosClient = new CosmosClient(cosmosConnection);
-    var doorHistoryService = new DoorHistoryService(cosmosClient, "DoorDB", "DoorHistory");
-    var cosmosdb = cosmosClient.CreateDatabaseIfNotExistsAsync("DoorDB").GetAwaiter().GetResult();
-    cosmosdb.Database.CreateContainerIfNotExistsAsync("DoorHistory","/id");
-    return doorHistoryService;
-}
+var cosmosDbClient = new CosmosClient(cosmosConnection);
+builder.Services.AddSingleton<CosmosClient>(cosmosDbClient);
+var doorHistoryRepository = new DoorHistoryRepository(cosmosDbClient);
+builder.Services.AddSingleton<IDoorHistoryRepository, DoorHistoryRepository>();
+builder.Services.AddSingleton<IDoorHistoryService, DoorHistoryService>();
+
+// Create cosmos db if not exist
+var cosmosdb = cosmosDbClient.CreateDatabaseIfNotExistsAsync("DoorDB").GetAwaiter().GetResult();
+ cosmosdb.Database.CreateContainerIfNotExistsAsync("DoorHistory","/id");
+
 
 // DI for service bus queue msg sender
 var sbsenderConnection = connectionStringItems.SBSender;

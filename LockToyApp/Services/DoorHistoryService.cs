@@ -1,31 +1,21 @@
 ﻿using LockToyApp.DTOs;
-using Microsoft.Azure.Cosmos;
-using ToyContracts;
+using LockToyApp.Repositories;
 
 namespace LockToyApp.Services
 {
     public class DoorHistoryService : IDoorHistoryService
     {
 
-        private Container container;
-        public DoorHistoryService(CosmosClient dbClient, string dbName, string containerName)
+        private readonly IDoorHistoryRepository historyRepository;
+        public DoorHistoryService(IDoorHistoryRepository historyRepository)
         {
-            this.container = dbClient.GetContainer(dbName, containerName);
+            this.historyRepository = historyRepository;
         }
 
         public async Task<List<HistoryDto>> GetDoorHistoryItemsAsync(string doorId)
         {
             var historyDtos = new List<HistoryDto>();
-            var queryString = $"SELECT* FROM c Where c.DoorId = '{doorId}'";
-            var query = this.container.GetItemQueryIterator<DoorHistoryData>(new QueryDefinition(queryString));
-            List<DoorHistoryData> historyData = new List<DoorHistoryData>();
-            while (query.HasMoreResults)
-            {
-                var response = await query.ReadNextAsync();
-
-                historyData.AddRange(response.ToList());
-            }
-
+            var historyData = await this.historyRepository.GetByIdAsync(doorId);
             if (historyData.Any())
             {
                 foreach (var item in historyData)
