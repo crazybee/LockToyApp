@@ -2,23 +2,24 @@
 a toy app to show the POC of a smart door system 
 Usage demo video https://youtu.be/dPjCnVGX5us
 
-The web app together with the swagger ui enabled is deployed at the url https://locktoyapp.azurewebsites.net/swagger/index.html
+The web api app together with the swagger ui enabled is deployed at the url https://locktoyapp.azurewebsites.net/swagger/index.html
 
 
-#Overview
+#Overview <br/>
 In the solution folder there are four project folders: ToyContracts, SimulatedDoor, LockToyApp and DoorOperationFunc The ToyContract project contains the definitions across the whole application.
 
 The SimulatedDoor project is a modified console iot hub client application from Microsoft example snippet, it is supposed to run inside the lock OS to receive the commands from the iot Hub. <br/>
 <br/>
 The LockToyApp is the web api application which receives the commands to open the door, check the operation history of a specific door, or get user information for the authorized user. There are currently three routes: <br/>
-GET /api/LockOp/GetUserByName <br/>
-POST /api/LockOp/OpenDoor <br/>
-GET /api/LockOp/DoorHistory
+POST /api/lockoperation/authenticate <br/>
+GET /api/lockoperation/user <br/>
+POST /api/lockoperation/opendoor <br/>
+GET /api/lockoperation/doorhistory
 <br/>
 <br/>
 The DoorOperationFunc project is an Azure Function App which receives the commands message from the service bus and forward it to the iot hub, meanwhile it also consolidates the operations inside the Azure Cosmos Container
 
-#Limitations
+#Limitations <br/>
 Due to the restriction of AAD of the company and time limit,  I am not able to setup multi-tenants and make use of AAD or LDAP to manage the authorization. Hence, I use a jwt authentication middleware to do the token authentication. Users have to make call to the authentication endpoint first to fetch a valid token then include it in the folow up requests in the bearer token header. 
 
 For this toy app and demo purpose, I created two users’ credentials inside a Azure SQL Database which has been created during initilization of the database. When making api request, only correct user name and password should be proviced through http headers, otherwise either 401 or null results will be returned.  <br/> 
@@ -28,7 +29,7 @@ One elevated user with the user name "Admin" (password: 1234567admin) has access
 
 For CI/CD, the solution was planned to be built and deployed using Azure DevOp pipelines, due to time limit, this was not yet included, it will be implemented in the future. 
 
-3, Overall work flow
+#Overall work flow <br/>
 
 web api (validate user, query sql table, query cosmos db) &rarr; send message to service bus queue &rarr; azure function listens at the service bus queue &rarr; azure function consolidate the operation records in cosmos db and send processed message to iot hub &rarr; iot hub forward commands to the iot device
 
