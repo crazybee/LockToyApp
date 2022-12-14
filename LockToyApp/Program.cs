@@ -1,11 +1,6 @@
-
-using Azure.Messaging.ServiceBus;
 using LockToyApp.DAL;
 using LockToyApp.Helpers;
 using LockToyApp.Injection;
-using LockToyApp.Repositories;
-using LockToyApp.Services;
-using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore;
 using ToyContracts;
 
@@ -36,18 +31,6 @@ var sqlConnection = connectionStringItems.SqlConnectioniString;
 builder.Services.AddDbContext<LockDBContext>(
     options => options.UseSqlServer(
         builder.Configuration.GetConnectionString(sqlConnection)));
-
-// DI for door history service
-var cosmosConnection = connectionStringItems.CosmosConnectionString;
-builder.Services.AddSingleton(InitializeDoorHistoryDb(cosmosConnection));
-static IDoorHistoryService InitializeDoorHistoryDb(string cosmosConnection)
-{
-    var cosmosClient = new CosmosClient(cosmosConnection);
-    var doorHistoryService = new DoorHistoryService(cosmosClient, "DoorDB", "DoorHistory");
-    var cosmosdb = cosmosClient.CreateDatabaseIfNotExistsAsync("DoorDB").GetAwaiter().GetResult();
-    cosmosdb.Database.CreateContainerIfNotExistsAsync("DoorHistory","/id");
-    return doorHistoryService;
-}
 
 // inject services
 DoorServiceProvider.AddServices(builder.Services, connectionStringItems, appSettingItems);
