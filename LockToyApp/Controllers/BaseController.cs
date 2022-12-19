@@ -13,9 +13,9 @@ namespace LockToyApp.Controllers
         {
             this.userService = userService;
         }
-        protected async Task<DBEntities.User> IsUserValidInContext(string userName)
+        protected async Task<DBEntities.User?> IsUserValidInContext(string userName)
         {
-            var user = await this.userService.GetUserByName(userName);
+            var user = await this.userService.GetUserByNameFromCache(userName);
             var userInContext = this.HttpContext.Items["User"] as DBEntities.User;
             if (user == null || userInContext == null || user != userInContext)
             {

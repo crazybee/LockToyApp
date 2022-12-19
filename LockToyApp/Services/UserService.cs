@@ -2,6 +2,7 @@
 using LockToyApp.Helpers;
 using LockToyApp.Models;
 using LockToyApp.Repositories;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace LockToyApp.Services
 {
@@ -9,10 +10,13 @@ namespace LockToyApp.Services
     {
         private readonly IUserRepository userRepository;
         private readonly IPasswordHasher passwordHasher;
-        public UserService(IUserRepository userRepository, IPasswordHasher passwordHasher)
+        private readonly IMemoryCache memoryCache;
+
+        public UserService(IUserRepository userRepository, IPasswordHasher passwordHasher, IMemoryCache memoryCache)
         {
             this.userRepository = userRepository;
             this.passwordHasher = passwordHasher;
+            this.memoryCache = memoryCache;
         }
         public async Task<User?> GetUserByName(string userName)
         {
@@ -21,6 +25,18 @@ namespace LockToyApp.Services
             return foundUser ?? null;
         }
 
+        public async Task<User?> GetUserByNameFromCache(string userName)
+        {
+            User? userOutput;
+            userOutput = memoryCache.Get<User>("userByName");
+            if (userOutput == null)
+            {
+                userOutput = await this.GetUserByName(userName);
+                this.memoryCache.Set("userByName", userOutput, TimeSpan.FromMinutes(60));
+            }
+
+            return userOutput;
+        }
         public async Task<bool> IsUserValid(string userName, string password)
         {
 
@@ -80,5 +96,20 @@ namespace LockToyApp.Services
             return userRegistrations;
         }
 
+        public async Task<ICollection<UserRegistration>?> GetUserRegistrationsFromCache(string userName)
+        {
+            ICollection<UserRegistration>? userRegistrationOutput;
+
+            userRegistrationOutput = memoryCache.Get<ICollection<UserRegistration>>("userregistration");
+
+            if (userRegistrationOutput == null)
+            {
+                userRegistrationOutput = await this.GetUserRegistrations(userName);
+                memoryCache.Set("userregistration", userRegistrationOutput, TimeSpan.FromMinutes(5));
+            }
+
+
+            return userRegistrationOutput;
+        }
     }
 }
