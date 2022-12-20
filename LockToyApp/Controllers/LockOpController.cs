@@ -90,7 +90,7 @@ namespace LockToyApp.Controllers
                 return this.BadRequest();
             }
 
-            return await this.doorHistoryService.GetDoorHistoryItemsAsync(doorRequest.DoorId);
+            return await this.doorHistoryService.GetDoorHistoryItemsFromCacheAsync(doorRequest.DoorId);
         }
     }
 }

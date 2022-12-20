@@ -28,11 +28,11 @@ namespace LockToyApp.Services
         public async Task<User?> GetUserByNameFromCache(string userName)
         {
             User? userOutput;
-            userOutput = memoryCache.Get<User>("userByName");
+            userOutput = memoryCache.Get<User>(userName);
             if (userOutput == null)
             {
                 userOutput = await this.GetUserByName(userName);
-                this.memoryCache.Set("userByName", userOutput, TimeSpan.FromMinutes(60));
+                this.memoryCache.Set(userName, userOutput, TimeSpan.FromMinutes(60));
             }
 
             return userOutput;

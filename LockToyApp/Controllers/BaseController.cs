@@ -17,7 +17,7 @@ namespace LockToyApp.Controllers
         {
             var user = await this.userService.GetUserByNameFromCache(userName);
             var userInContext = this.HttpContext.Items["User"] as DBEntities.User;
-            if (user == null || userInContext == null || user != userInContext)
+            if (user == null || userInContext == null || user.UserID != userInContext.UserID)
             {
                 return null;
             }

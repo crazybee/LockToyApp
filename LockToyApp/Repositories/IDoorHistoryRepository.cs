@@ -5,6 +5,6 @@ namespace LockToyApp.Repositories
 {
     public interface IDoorHistoryRepository
     {
-        Task<IEnumerable<DoorHistoryData>> GetByIdAsync(string id);
+        IAsyncEnumerable<DoorHistoryData> GetByIdAsync(string id, int maxCount = 100);
     }
 }
