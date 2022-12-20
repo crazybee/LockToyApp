@@ -1,5 +1,5 @@
-﻿using LockToyApp.DBEntities;
-using Microsoft.Azure.Cosmos;
+﻿using Microsoft.Azure.Cosmos;
+using Microsoft.Azure.Cosmos.Linq;
 using ToyContracts;
 
 namespace LockToyApp.Repositories
@@ -13,20 +13,29 @@ namespace LockToyApp.Repositories
         {
             this.container = dbClient.GetContainer(dbName, containerName);
         }
-        public async Task<IEnumerable<DoorHistoryData>> GetByIdAsync(string id)
+
+        /// <summary>
+        /// take maximum number of items from cosmosDb
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="maxCount"></param>
+        /// <returns>Yield return items</returns>
+        public async IAsyncEnumerable<DoorHistoryData> GetByIdAsync(string id, int maxCount = 100)
         {
-            var queryString = $"SELECT* FROM c Where c.DoorId = '{id}'";
-            var query = this.container.GetItemQueryIterator<DoorHistoryData>(new QueryDefinition(queryString));
+            IOrderedQueryable<DoorHistoryData> queryable = this.container.GetItemLinqQueryable<DoorHistoryData>();
 
-            List<DoorHistoryData> historyData = new();
-            while (query.HasMoreResults)
+            var matches = queryable.Where(i => i.DoorId == id).OrderByDescending(i => i.OperationTime).Take(maxCount);
+            using FeedIterator<DoorHistoryData> linqFeed = matches.ToFeedIterator();
+            while (linqFeed.HasMoreResults)
             {
-                var response = await query.ReadNextAsync();
+                FeedResponse<DoorHistoryData> response = await linqFeed.ReadNextAsync();
 
-                historyData.AddRange(response.ToList());
+                // Iterate query results
+                foreach (DoorHistoryData item in response)
+                {
+                    yield return item;
+                }
             }
-
-            return historyData;
         }
     }
 }

@@ -7,10 +7,14 @@ namespace LockToyApp.Services
     {
         Task<User?> GetUserByName(string userName );
 
+        Task<User?> GetUserByNameFromCache(string userName);
+
         Task<Boolean> IsUserValid(string userName, string userToken);
 
         Task<AuthenticationResponse?> Authenticate(AuthenticationRequest request);
 
         Task<ICollection<UserRegistration>?> GetUserRegistrations(string userName);
+
+        Task<ICollection<UserRegistration>?> GetUserRegistrationsFromCache(string userName);
     }
 }

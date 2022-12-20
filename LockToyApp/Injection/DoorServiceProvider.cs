@@ -33,6 +33,7 @@ namespace LockToyApp.Injection
             services.AddScoped<IPasswordHasher, PasswordHasher>(); // because IOption is scoped
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IUserService, UserService>();
+            services.AddMemoryCache();
         }
     }
 }

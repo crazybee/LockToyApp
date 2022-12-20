@@ -41,7 +41,7 @@ namespace LockToyApp.Controllers
                 return null;
             }
 
-            var registrations = await this.userService.GetUserRegistrations(userName);
+            var registrations = await this.userService.GetUserRegistrationsFromCache(userName);
             var doorIds = registrations?.Select(r => r.DoorID).ToList();
 
             return new UserDto() { UserName = validUser.UserName, UserType = validUser.UserType.ToString(), DoorIds = doorIds };
@@ -59,7 +59,7 @@ namespace LockToyApp.Controllers
                 return this.BadRequest();
             }
 
-            var registrations = await this.userService.GetUserRegistrations(doorRequest.UserName);
+            var registrations = await this.userService.GetUserRegistrationsFromCache(doorRequest.UserName);
             var doorIds = registrations?.Select(r => r.DoorID).ToList();
 
             if (doorIds != null && doorIds.Contains(parsedDoorId))
@@ -90,7 +90,7 @@ namespace LockToyApp.Controllers
                 return this.BadRequest();
             }
 
-            return await this.doorHistoryService.GetDoorHistoryItemsAsync(doorRequest.DoorId);
+            return await this.doorHistoryService.GetDoorHistoryItemsFromCacheAsync(doorRequest.DoorId);
         }
     }
 }
