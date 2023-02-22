@@ -2,8 +2,6 @@
 a toy app to show the POC of a smart door system 
 Usage demo video https://youtu.be/dPjCnVGX5us
 
-The web api app together with the swagger ui enabled is deployed at the url https://locktoyapp.azurewebsites.net/swagger/index.html
-
 
 #Overview <br/>
 In the solution folder there are four project folders: ToyContracts, SimulatedDoor, LockToyApp and DoorOperationFunc The ToyContract project contains the definitions across the whole application.
